@@ -11,12 +11,10 @@
 
 ## Data sources
 
-This analysis used the following data: *[please fill in]*
+This analysis used the following data:
 
-- Data source 1
-- Data source 2
-- [External data source 1](www.google.com)
-- [External data source 2](www.google.com)
+- [Discover] (https://www.discover-now.co.uk)
+- [ONS Clinical commissioning group population estimates] (https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/clinicalcommissioninggroupmidyearpopulationestimates)
 
 ## How does it work?
 
