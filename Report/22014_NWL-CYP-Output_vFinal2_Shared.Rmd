@@ -1,0 +1,1251 @@
+---
+header-includes: 
+  - \usepackage{fontspec}
+  - \setmainfont{Arial}
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+  - \usepackage{xcolor}
+  - \usepackage{draftwatermark}
+title: "**Impact of the COVID-19 pandemic on the mental health of the children and young people population in North West London**"
+author: 
+  - Roberto Fernandez Crespo
+  - Gulam Muktadir
+  - Evgeniy Galimov
+  - Sandeep Prashnar
+  - Sarah Houston
+  - Sadie Myhill
+  - Clare McCrudden
+  - Emma Sharpe-Jones
+  - Lewis Thomas
+  - Tomasz Szymanski
+  - Alex Bottle
+  - Melanie Leis
+  - Matthew Chisambi
+always_allow_html: true
+bibliography: references.bib 
+output:
+  bookdown::pdf_document2:
+    latex_engine: lualatex
+    toc: false
+  bookdown::html_document2:
+  bookdown::word_document2:
+editor_options:
+  chunk_output_type: console
+---
+
+\SetWatermarkText{Draft 12/05/2022}
+\SetWatermarkLightness{0.8}
+\SetWatermarkScale{0.5}
+
+
+```{r Libraries and general functions, message=FALSE, warning=FALSE, include=FALSE}
+#Libraries and additional functions
+library(readxl)
+library(dplyr)
+library(tidyverse)
+library(data.table)
+library(readr)
+library(ggplot2)
+library(magrittr)
+library(lubridate)
+library(cowplot)
+library(kableExtra)
+library(RColorBrewer)
+
+`%nin%` <- Negate(`%in%`)
+```
+```{r color palettes, message=FALSE ,warning=FALSE, include=FALSE}
+
+cp_age <- brewer.pal(7,"YlOrRd")[2:7]
+cp_imd <- brewer.pal(6,"Spectral")
+cp_imd[cp_imd=="#E6F598"] <- "#ACE489"
+cp_imd[cp_imd=="#99D594"] <- "#449C59"
+```
+
+\pagenumbering{gobble} 
+
+\vspace*{10.5cm}
+
+\begin{center}
+\includegraphics[width=4cm,keepaspectratio]{logos/IGHI.png}
+\includegraphics[width=4cm,keepaspectratio]{logos/imperial-college-health-partners-ichp-logo-vector.png}
+\includegraphics[width=4cm,keepaspectratio]{logos/NWL-ICS-logo-360x115.png}
+\includegraphics[width=4cm,keepaspectratio]{logos/The Health Foundation Logo.jpg}
+\end{center}
+
+\newpage
+
+\setcounter{tocdepth}{3}
+\tableofcontents
+
+\pagenumbering{arabic} 
+
+\newpage
+
+# Introduction
+
+The Networked Data Lab (NDL) is a pioneering collaborative network of analysts who use linked data, open analytics, and public and patient involvement to tackle the most pressing challenges in health and social care. The initiative is led by The Health Foundation, working closely with five partner labs across the UK.
+
+Our lab, North West London (NWL), is a partnership between Imperial College Health Partners (ICHP), NWL Health and Care Partnership and the Institute of Global Health Innovation (IGHI).
+
+This report is the second in the NDL’s programme and will explore how the children and young people’s (CYP) population’s access to mental health (MH) services was disrupted by the COVID-19 pandemic.  We know, for example, that the pandemic has put a large and unforeseen strain on healthcare services  [@Tangcharoensathienn83; @Mahasen2664], and on people’s MH [@ijerph17228479; @Fordn614].
+
+Our analysis has been undertaken through a collaborative approach with professional partners in NWL, public and patient involvement and using data from NWL’s depersonalized Discover dataset.
+
+In order for us to better determine what research questions are more important to NWL CYP, we conducted a patient and public involvement and engagement (PPIE) partnership with a Young People’s Advisory Group (YPAG) to determine their priorities. The YPAG was a diverse group of 20 young people from NWL (e.g. 65% from ethnic minority groups and 20% non-binary). This was followed by a prioritisation exercise in which CYP that were consulted with, outlined a list of research questions and priorities, that we considered could be further investigated using the Discover dataset. We also consulted a group of multidisciplinary, healthcare professionals in NWL working on the delivery of MH services that forms our professional reference group (PRG) for their research priorities. 
+
+Finally, the NWL lab agreed to investigate three main topic areas:
+
+- Access to MH services
+- Severity of MH difficulties 
+- Transitions to other MH services.
+
+
+\pagebreak
+
+# Methods
+## Data {#metd}
+
+All patient data used in this analysis was extracted from the [Discover dataset](https://imperialcollegehealthpartners.com/discover-now/), using the tables listed in table \@ref(tab:methodsDiscoverTabs).
+
+```{r methodsDiscoverTabs, warning=FALSE, echo=FALSE}
+
+discotabs <- read_excel("dataV2/DataRepository.xlsx",sheet = "DiscoverTables")
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+if(doc.type == "docx"){
+  discotabs %>%
+    pander::pander()
+  } else {
+  kbl(discotabs,caption = "List of DiscoverNow data tables used in this analysis") %>%
+      kable_styling(latex_options = "HOLD_position") %>%
+      kable_paper("striped")
+}
+```
+
+The Patient Index was used to identify the cohort and then this was linked to the other datasets (where the activity was related to MH) listed above using de-identified NHS Numbers. The GP referrals seen comes from the MH PLD dataset which is a locally agreed monthly feed from CNWL and WLMHT on the various MH services they provide for NWL. 
+
+Due to limitations of the Discover dataset, it is not possible to determine the total number of CYP that were registered in the database for each year (see Limitations section). We used publicly available data from the Office for National Statistics (ONS) to identify the total population per year based on gender and age (data can be found on the [ONS website](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/clinicalcommissioninggroupmidyearpopulationestimates)), but it was not possible to do so for each ethnic group. We extracted the data for the relevant NWL Clinical Commissioning Groups (CCGs) using the codes E38000020, E38000031, E38000048, E38000070, E38000074, E38000082, E38000084, E38000202, E38000256 where appropriate, subsetting the population so that we only consider those 25 and younger, and totaling the counts of the population by age group or gender.
+
+For this analysis, we considered the following MH conditions: Anxiety, bipolar disorder, depression, eating disorders, personality disorders, schizophrenia, self harm and harmful thoughts (more detail below). We included data ranging from March 2015 to September 2021, considering the period from March 2015 to February 2020 as the pre-pandemic period, and data from March 2020 to September 2021 to reflect the time during the COVID-19 pandemic. We included all patients in NWL aged 25 or under from March 2015 to September 2021,  and considered any patient that met any of the following conditions to have had a mental health event (any of these is considered a separate event):
+
+-   GP-entered code (SNOMED or Read) that refers to MH 
+-   GP prescription of MH drugs
+-   GP referral to MH services
+-   Acute admission for MH reasons
+-   A&E or outpatient visit for MH reasons
+-   MH appointment for one of the two MH NHS trusts in NWL (Central and North West London, West London NHS trusts)
+
+A full list of codes used in this analysis is provided in the supplementary excel file. GP SNOMED and Read codes, referral codes can be found under the 'ReadCode' tab, GP prescription drugs can be found under the "BNF drug names" tab, ICD-10 codes (considered in any position) used to identify admissions can be found under the 'ICD-10 codes' tab, and MH-related outpatient visits were identified using specialty codes in the 'Specialist codes' tab.
+
+Five demographic categories were used in our analysis (Table \@ref(tab:metdemo)) to further describe differences across the NWL CYP population.
+
+Furthermore, we used an additional Discover dataset that contains information on MH referrals seen in NWL. This dataset contains information on when each patient was initially referred, descriptors of the teams that the patient interacted with, and the dates of those interactions. It includes data on various mental health services offered by NWL’s MH Trusts including Child and Adolescent Mental Health Services (CAMHS). We count each event within this table as a referral; cancelled referrals and instances where the patient did not attend are not included in our referral count.
+
+Total counts with values lower than five have been suppressed in order to help anonimise results. More information can be found in the [Handbook on Statistical Disclosure Control for Outputs](https://ukdataservice.ac.uk/app/uploads/thf_datareport_aw_web.pdf).
+
+```{r metdemo, warning=FALSE,echo=FALSE}
+democats <- read_excel("dataV2/DataRepository.xlsx","metdemo")
+
+democats[] <- data.frame(lapply(X = democats, function(x) ifelse(is.na(x)," ",x)))
+
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+if(doc.type == "docx"){
+    pander::pander(democats)
+  } else {
+    kbl(democats,caption = "Demographic categories included in analysis") %>%
+      kable_styling(latex_options = "HOLD_position") %>%
+      kable_paper("striped") %>%
+      column_spec(column = 5,width = "3cm") %>%
+      column_spec(column = 6,width = "3cm") %>%
+      row_spec(row = 0, bold = T)
+  }
+
+```
+
+
+We also extracted data for the entire CYP population in NWL during the same time period (March 2015 to September 2021), including the demographic variables listed above, so that we could estimate the total proportion of CYP having mental health events.
+
+## Data analytics
+
+Data analysis was conducted on the Discover trusted research environment, using R version 3.6.1. Interrupted time series analysis was conducted in order to quantify the effect of the COVID-19 pandemic on the number of MH events. This was performed by using Poisson regressions to model the total number of MH events as a function of time, a variable that determines whether the pandemic has started (date is March 2020 or later) and harmonic functions that account for yearly seasonal variations[@PMID:27283160]. A model was created for each of the categories within our five demographic variables. In our model we assume the effect of the COVID-19 pandemic to be a change in level, as our initial hypothesis is that the number of MH events decreased at the beginning of the pandemic, due to lack of adaptation of services to the pandemic, and would then continue to increase as the services adapted and MH events increase in the population.
+
+\pagebreak
+
+# Results
+## Objective 1: The CYP MH population
+
+Our first point of analysis is to look at our CYP population and how prevalent MH difficulties are within this population.
+
+### How the CYP population are accessing MH services
+
+We investigated how the population are accessing MH services over the years. The data shows that visits to GP  and GP prescriptions of MH drugs are the most common method (Figure \@ref(fig:o1acc)). The number of CYP accessing MH services across all settings in 2021 was 191% of what it was in 2016, clearly demonstrating the increased MH needs of the population. The average increase per year over the entire period is 19.3%.
+
+```{r o1acc, echo=FALSE, warning=FALSE, fig.width=8, fig.height=3, fig.pos='H', fig.cap="Barcharts showing the number of unique patients accessing MH within different healthcare settings per month. Data related to elective and non-elective admissions is not shown due to small numbers. Numerator: Number of unique patients that accessed each of the categories per year. Denominator: Number of months considered for each year."}
+
+o1accgr <- read_excel("dataV2/DataRepository.xlsx",sheet = "o1acc") %>% 
+  filter(Setting %nin% c("Non Elective Admission with MH ICD10",
+                         "Elective Admission with MH ICD10"))
+
+o1accgr$Setting <- factor(o1accgr$Setting, levels = c(
+   "GP Event with Read Code or GP prescription with MH drug",
+   "Seen at MH Trust (CNWL/WLMHT)",
+   "A&E Attendance with Psychiatric Conditions",
+   "Outpatient Appointment with MH TFC"
+))
+
+# o1accgr %>% group_by(year) %>% summarise(n=sum(prop)) %>% mutate(prev=lag(n)) %>%
+#   mutate(inc=(n-prev)/prev) %>% mutate(mean(na.omit(inc)))
+
+ggplot(o1accgr) +
+  geom_bar(aes(x=year, y=prop, fill=Setting), stat='identity', position='dodge') +
+  scale_x_continuous(breaks = c(2015:2021)) +
+  scale_fill_brewer(palette = "Set3") + 
+  labs(y="Number of patients per month") +
+  theme_bw() + 
+  theme(legend.position = "right")
+# ggsave("plots/DistributionSetting.png",width = 8,height = 5,dpi = "print")
+```
+
+### Number of CYP accessing MH by ethnic background
+
+The number of CYP in NWL accessing MH care has increased from 2015 to 2021, regardless of ethnic background (Figure \@ref(fig:o1eth)). Furthermore, there was been an increase in the number of patients seeking MH care in 2021 compared to the trend in previous years for all ethnicities. Comparing the number of patients in 2021 to those in 2016, the number of CYP accessing MH care in the 'Unknown' category increased by 379%, those in other ethnic groups increased by 175%, those with a mixed ethnic background increased by 171%, and those with a Asian or Asian British, White and Black or Black British background increased by 152%, 144% and 130%, respectively.
+
+```{r o1eth, echo=FALSE, warning=FALSE, fig.width=7, fig.height=4, fig.cap="Number of unique patients accessing MH by ethnic background per year. Only values from the months from January to September were included in this analysis in order to compare equal time frames across years."}
+
+o1ethgr <- read_excel("dataV2/DataRepository.xlsx",sheet = "o1eth")
+
+o1ethgr$EthnicCategory[o1ethgr$EthnicCategory == "Asian or asian british"] <- "Asian or Asian British"
+o1ethgr$EthnicCategory[o1ethgr$EthnicCategory == "Black or black british"] <- "Black or Black British"
+
+ # o1ethgr %>% filter(year %nin% 2016:2020) %>% group_by(EthnicCategory) %>%
+ #   summarise( increase = (prop[year == 2021] - prop[year==2015]) / prop[year==2015]) %>%
+ #   arrange(increase)
+
+ggplot(o1ethgr) + 
+  geom_line(aes(x=year, y=n, group=EthnicCategory, color=EthnicCategory), size=1.2) + 
+  geom_point(aes(x=year, y=n, group=EthnicCategory, color=EthnicCategory), size=1.5) + 
+  scale_x_continuous(breaks = 2016:2020) +
+  scale_color_brewer(palette = "Set1") +
+  labs(y="Number of patients\naccessing MH care", color="Ethnicity") +
+  theme_bw() + 
+  theme(legend.position = "bottom")
+ggsave("plots/DistributionEthnicity.png",width = 8,height = 5,dpi = "print")
+```
+
+### Proportion of CYP accessing MH by gender
+
+When looking at differences by gender, we see a mostly even split for all settings except for GP visits and prescriptions of MH drugs (Figure \@ref(fig:o1setge)), where females had a slightly higher proportion of their population that had these types of primary care interactions than males. When brought to the attention of our Young People’s Advisory Group, they mentioned this could be due to added stigma for males needed MH support. Data from CYP who identify as other genders could not be included in this analysis due to low numbers. However, the differences identified between males and females are not statistically significant (Mann-Whitney test p > 0.05).
+
+```{r o1setge, echo=FALSE, warning=FALSE, fig.width=9, fig.height=7, fig.cap="Percentage of patients accessing MH by gender per year. Only data from 2016 to 2020 is included in this chart. Data related to elective and non-elective admissions is not shown due to small numbers. Numerator: Total number of unique patients that have received each category of care. Denominator: Total population aged 25 or youger across all NWL CCGs by gender (Obtained from ONS Clinical commissioning group population estimates datasets). P values calculated using Mann-Whitney's test."}
+
+o1setgeg <- read_excel("dataV2/DataRepository.xlsx",sheet = "o1setge") 
+
+o1setgeg <- o1setgeg %>% filter(Gender != "Unknown") %>% 
+  filter(Setting %nin% c(
+    "Non Elective Admission with MH ICD10",
+    "Elective Admission with MH ICD10")
+    ) %>%
+  filter(year %nin% c(2015,2021))
+
+setting_order <- c(
+  "GP Event with Read Code or GP prescription with MH drug",
+  "Seen at MH Trust (CNWL/WLMHT)",
+  "A&E Attendance with Psychiatric Conditions",
+  "Outpatient Appointment with MH TFC")
+
+o1setgeg$Setting <- factor(o1setgeg$Setting,levels = setting_order, labels = str_wrap(setting_order,35))
+
+o1setgeg_stats <-  o1setgeg %>%
+    group_by(Setting) %>%
+    rstatix::wilcox_test(formula = prop ~ Gender,) %>%
+    mutate(p.adj = p.adjust(p,method = 'fdr')) %>%
+    mutate(p.signif = gtools::stars.pval(p.adj)) %>%
+    mutate(p.signif = ifelse(p.signif %in% c(" ","."),"ns",p.signif))
+
+o1setgeg_stats$y.position <- c(0.038,0.024,0.0026,0.0015)
+
+ggplot(o1setgeg) + 
+  geom_boxplot(aes(x=Gender,y=prop,fill=Gender)) + 
+  ggpubr::stat_pvalue_manual(data = o1setgeg_stats, hide.ns = F, label = "p.signif") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y="Proportion of patients\nwithin each category per year",x="") + 
+  facet_wrap(~Setting,nrow = 2,scales = "free_y") +
+  theme_bw() +
+  theme(legend.position = "none")
+# ggsave("plots/DistributionGender.png",width = 10,height = 7,dpi = "print")
+```
+
+### CYP access to MH services by age group
+
+Breaking down the data by age group shows that different age groups access MH care in different ways (Figure \@ref(fig:o1setage)). For each care setting, the distribution of CYP across age groups was significantly different ( Kruskal-wallis test p < 0.05). There is a clear increase in the proportion of people with GP events and prescriptions, and A&E attendance with psychiatric conditions with age. There is also a higher proportion of 12 to 17 year olds and 18 to 21 year olds that are seen at MH trusts and have MH outpatient appointments than other age groups.
+
+```{r o1setage, echo=FALSE, warning=FALSE, fig.width=9, fig.height=7, fig.cap="Percentage of patients accessing different MH care settings by age group per year. Only data from 2016 to 2020 is included in this chart. Numerator: Total number of unique patients that have received each category of treatment per age group. Denominator: Total population aged 25 or youger across all NWL CCGs by age group (Obtained from ONS Clinical commissioning group population estimates datasets). P values calculated using Kruskal-Wallis test."}
+
+o1setageg <- read_excel("dataV2/DataRepository.xlsx",sheet = "o1setage") %>%
+  filter(Setting %nin% c("Non Elective Admission with MH ICD10",
+                        "Elective Admission with MH ICD10")) %>%
+  filter(year %nin% c(2015,2021))
+
+setting_order <- c(
+  "GP Event with Read Code or GP prescription with MH drug",
+  "Seen at MH Trust (CNWL/WLMHT)",
+  "A&E Attendance with Psychiatric Conditions",
+  "Outpatient Appointment with MH TFC")
+
+o1setageg$Setting <- factor(o1setageg$Setting,levels = setting_order, labels = str_wrap(setting_order,35))
+o1setageg$AgeGroup <- factor(o1setageg$AgeGroup, levels = c("0-4","5-11","12-17","18-21","22-25"))
+o1setageg$prop <- as.numeric(o1setageg$prop)
+
+ggplot(o1setageg) + 
+  geom_boxplot(aes(x=AgeGroup, y=prop, fill=AgeGroup)) +
+  scale_y_continuous(labels = scales::percent) +
+  # ggpubr::stat_pvalue_manual(data = o1setageg_stats, hide.ns = F, label = "p.signif") +
+  ggpubr::stat_compare_means(aes(x=AgeGroup,
+                                 y=prop,
+                                 fill=AgeGroup,
+                                 label = ifelse(
+                                   test = as.numeric(..p.format..) < 0.001,
+                                   "p < 0.001",
+                                   paste0("p = ",round(as.numeric(..p.format..),3))
+                                  )),
+                             method = "kruskal.test") +
+  scale_fill_manual(values = cp_age) +
+  labs(y="Proportion of patients per year", fill="Age group",x="") +
+  facet_wrap(~Setting,scales = "free_y") +
+  theme_bw() + 
+  theme(legend.position = "none") + 
+  guides(fill = guide_legend(nrow = 1))
+# ggsave("plots/DistributionAgeSetting.png",width = 10,height = 7,dpi = "print",scale = 0.9)
+```
+
+## Objective 2: The impact of COVID-19 on CYP MH
+
+In this section, our aim is to explore the impact of the COVID-19 pandemic on CYP MH. In order to achieve this, we are using a method called interrupted time series (ITT).
+
+### Trends in number of MH events
+
+We started by analysing the overall trends in MH events. Overall, we identified that for all demographic categories, the number of MH events (see \@ref(metd))) has increased over time (Figure \@ref(fig:g2evtnp2)). All demographic categories also showed an acute decrease in the number of MH events right at the start of the pandemic (March 2020), possibly due to the lack of access to services, or unwillingness to go hospitals or GP practices early on in the pandemic. This was followed by a return to similar values within 3 months. The trends seen here align with the increase in MH service demand and usage in the UK over time [@pmid32707037]
+
+```{r Goal 2 - Overall number of events, echo=FALSE, warning=FALSE}
+mhevents <- read_excel("dataV2/DataRepository.xlsx",sheet = "O2_MH_event_counts",
+                       col_types = c("numeric","text","text","text","text","text","text"))
+
+mhevents_baseline <- read_excel("dataV2/DataRepository.xlsx",sheet = "O2_baseline")
+mhevents_setting <- read_excel("dataV2/DataRepository.xlsx", sheet = "O2_time_series_setting")
+
+mhevents_baseline <- mhevents_baseline %>%
+    mutate(year_month = zoo::as.Date.yearmon(MonthYear),
+           n = as.numeric(diag))
+
+mhev_setting <- mhevents_setting %>% select(year_month = MonthYear,Setting = subcat,n = diag) %>% 
+  filter(!is.na(Setting)) %>%
+  mutate(n = as.numeric(n),
+         year_month = zoo::as.Date.yearmon(year_month))
+
+mhevents <- mhevents %>%
+  mutate(year_month = zoo::as.Date.yearmon(year_month),
+         n = as.numeric(n))
+
+mhev_gender <- mhevents %>% select(year_month,Gender,n) %>% 
+  filter(!is.na(Gender)) %>%
+  filter(Gender != "Unknown")
+mhev_age <- mhevents %>% select(year_month,AgeBracket,n) %>% 
+  filter(!is.na(AgeBracket)) %>%
+  filter(AgeBracket != "0-4") %>%
+  mutate(n = as.numeric(n))
+mhev_age$AgeBracket <- factor(mhev_age$AgeBracket, c("5-11","12-17","18-21","22-25","26-30"))
+
+mhev_ethn <- mhevents %>% select(year_month,EthnicCategory,n) %>% filter(!is.na(EthnicCategory))
+mhev_ethn$EthnicCategory[mhev_ethn$EthnicCategory == "Asian or asian british"] <- "Asian or Asian British"
+mhev_ethn$EthnicCategory[mhev_ethn$EthnicCategory == "Black or black british"] <- "Black or Black British"
+
+mhev_ccg <- mhevents %>% 
+  select(year_month,CCG_Name,n) %>%
+  filter(!is.na(CCG_Name)) %>%
+  filter(CCG_Name!="NULL") %>%
+  mutate(CCG_Name = str_to_title(CCG_Name)) %>%
+  mutate(CCG_Name = str_replace_all(CCG_Name,"Nhs","NHS")) %>%
+  mutate(CCG_Name = str_replace_all(CCG_Name,"Ccg","CCG")) %>%
+  mutate(CCG_Name = str_replace_all(CCG_Name,"And","and")) 
+
+mhev_imd <- mhevents %>% select(year_month,IMD_Quintile,n) %>% filter(!is.na(IMD_Quintile)) %>%
+mutate(IMD_Quintile = case_when(IMD_Quintile == "1" ~ "1 (Most deprived)",
+                                IMD_Quintile == "2" ~ "2",
+                                IMD_Quintile == "3" ~ "3",
+                                IMD_Quintile == "4" ~ "4",
+                                IMD_Quintile == "5" ~ "5 (Least deprived)",
+                                IMD_Quintile == "Unknown" ~ "Unknown"
+                                ))
+
+mhev_baseline <- ggplot(mhevents_baseline, aes(x=year_month, y=n, color="Total number")) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_manual(values = "black") +
+  guides(color = guide_legend(title.position = "top",title.hjust = 0.5)) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events", color="")
+
+mhev_genderplot <- ggplot(mhev_gender, aes(x=year_month, y=n, color=Gender)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  guides(color = guide_legend(title.position = "top",title.hjust = 0.5)) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events")
+
+mhev_ageplot <- ggplot(mhev_age, aes(x=year_month, y=n, color=AgeBracket)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_manual(values = cp_age[2:7]) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events",color="Age bracket")  + 
+  guides(color = guide_legend(nrow = 2,title.position = "top",title.hjust = 0.5,byrow = T))
+
+mhev_ethplot <- ggplot(mhev_ethn, aes(x=year_month, y=n, color=EthnicCategory)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_brewer(palette = "Set1",labels = function(x) str_wrap(x,13)) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events",color="Ethnicity") + 
+  guides(color = guide_legend(nrow = 2, title.position = "top",title.hjust = 0.5, byrow = T))
+
+mhev_ccgplot <- ggplot(mhev_ccg, aes(x=year_month, y=n, color=CCG_Name)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_brewer(palette = "Dark2",labels = function(x) str_wrap(x,10)) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events",color="CCG") + 
+  guides(color = guide_legend(nrow = 3, title.position = "top",title.hjust = 0.5, byrow = T))
+
+mhev_imdplot <- ggplot(mhev_imd, aes(x=year_month, y=n, color=IMD_Quintile)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_manual(values = cp_imd, labels = function(x) str_wrap(x,5)) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events
+       ",color="IMD quintile")  + 
+  guides(color = guide_legend(nrow = 2,title.position = "top",title.hjust = 0.5,byrow = T))
+
+mhev_setplotp1 <- ggplot(subset(mhev_setting, mhev_setting$Setting %in% c("GP Event with Read Code or GP prescription with MH drug",
+                                                                           "Seen at MH Trust (CNWL/WLMHT)")), 
+                                 aes(x=year_month, y=n, color=Setting)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events
+       ",color="Care\nsetting")  + 
+  guides(color = guide_legend(nrow = 2,title.position = "top",title.hjust = 0.5,byrow = T))
+
+mhev_setplotp2 <- ggplot(subset(mhev_setting, mhev_setting$Setting %in% c("A&E Attendance with Psychiatric Conditions", "Outpatient Appointment with MH TFC"  )), 
+                                 aes(x=year_month, y=n, color=Setting)) +
+  geom_line(size=1.3) + 
+  geom_vline(xintercept = as.Date("2020-03-01"), linetype=2,color='grey40') +
+  theme_bw() +
+  scale_color_manual(values = c("#FA60D7","#C29A00")) +
+  theme(legend.position = 'bottom') +
+  labs(x="Year",y="Total nmental\nhealth events
+       ",color="Care\nsetting")  + 
+  guides(color = guide_legend(nrow = 2,title.position = "top",title.hjust = 0.5,byrow = T))
+
+```
+
+```{r g2evtnp1, echo=FALSE, warning=FALSE, fig.width=8, fig.height=8}
+
+plot_grid(
+  mhev_baseline, mhev_ageplot,
+  mhev_genderplot, mhev_ethplot,
+  ncol = 2,
+  labels = c("A","B","C","D"), align = 'hv',axis = 'lrtb'
+)
+
+# plot_grid(
+#   plot_grid(
+#     mhev_imdplot + guides(color = guide_legend(ncol = 2,byrow = T)),
+#     mhev_ccgplot + guides(color = guide_legend(ncol = 2)),
+#     ncol = 2,
+#     labels = c("E","F"), align = 'hv'),
+#   plot_grid(ggplot(data.table()) + theme_void(),
+#             mhev_setplot + guides(color = guide_legend(ncol = 2)),
+#             ggplot(data.table()) + theme_void(),
+#             ncol = 3,rel_widths = c(1,2,1),labels = c("","G","")),
+#   ncol = 1, rel_heights = c(1,1)
+# )
+
+
+```
+
+\pagebreak
+
+```{r g2evtnp2, echo=FALSE, warning=FALSE, fig.width=8, fig.height=8, fig.cap="Total number of metal health events (A) and total events split by age (B), gender (C), ethnicity (D), IMD quintile (E), CCG (F) and care setting (G1 and G2). Each demographic category is indicated in a different colour. Grey vertical dashed lines indicated the start of the COVID-19 pandemic (March 2020). Age group 0-4, and care setting of elective and non-elective admissions removed due to small numbers over time."}
+
+# plot_grid(
+#   mhev_baseline, mhev_ageplot,
+#   mhev_genderplot, mhev_ethplot,
+#   ncol = 2,
+#   labels = c("A","B","C","D"), align = 'hv',axis = 'lrtb'
+# )
+
+plot_grid(
+  plot_grid(
+    mhev_imdplot + guides(color = guide_legend(ncol = 2,byrow = T)),
+    mhev_ccgplot + guides(color = guide_legend(ncol = 2)),
+    mhev_setplotp1 + guides(color = guide_legend(ncol = 1)),
+    mhev_setplotp2 + guides(color = guide_legend(ncol = 1)),
+    ncol = 2,
+    labels = c("E","F","G1","G2"), align = 'hv'),
+  ncol = 1, rel_heights = c(1.2,1)
+)
+
+
+# plot_grid(
+#   mhev_baseline, mhev_ageplot,
+#   mhev_genderplot, mhev_ethplot,
+#   mhev_imdplot + guides(color = guide_legend(ncol = 2,byrow = T)),
+#   mhev_ccgplot + guides(color = guide_legend(ncol = 2)),
+#   mhev_setplotp1 + guides(color = guide_legend(ncol = 1)),
+#   mhev_setplotp2 + guides(color = guide_legend(ncol = 1)),
+#   nrow = 2, align = 'hv')
+
+# ggsave("plots/EventsOverTime.png",width = 20,height = 8,dpi = "print")
+
+
+```
+
+\pagebreak
+
+### New patients in the system since the start of the COVID-19 pandemic
+
+We also wanted to gather insights into the new patients coming into the healthcare system since the start of the pandemic. We split the list of all CYP having a MH event into those that were seen prior to the pandemic (March 2015 to February 2020) and those that were new to the system since the pandemic started (Figure \@ref(fig:g2newp)). We identified that at the start of the pandemic, the share of new patients in the system (March 2020) was 11.0% and has since steadily increased, rising to 40.5% by September 2021. This highlights that both patients that have had a previous MH event as well as those that have had MH events since the start of the pandemic have been impacted by it. These results fall in line with previous reports on the rise of CYP without previous MH needs, requiring MH services since the start of the pandemic.
+
+```{r g2newp, echo=FALSE, warning=FALSE,fig.width=6,fig.height=4, fig.cap="Proportion of unique patients that had a MH event prior to the pandemic (blue) and those that had an initial MH event since the start of the pandemic (yellow) over time."}
+newp <- data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "O2_first_contacts"))
+newsub <- newp %>% filter(seen_before != "pre-pandemic") %>%
+  mutate(year_month = as.Date(year_month))
+
+ggplot(newsub) + 
+  geom_area(aes(x=year_month,y=prop,fill=seen_before)) + 
+  scale_x_date(date_breaks = "3 month",date_labels = "%b %Y") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_bw() +
+  labs(x = "", y="Proportion of patients", fill="") +
+  scale_fill_manual(breaks = c("New patient","Seen previously"),
+                    values = c("goldenrod2","cornflowerblue"),
+                    labels = c("New patients","Patients seen pre-pandemic")) +
+  theme(legend.position = "bottom")
+ggsave("plots/PropPrePostCovid.png",width = 8,height = 5,dpi = "print")
+```
+
+\pagebreak
+
+When considering the turnover of patients per month, we identified a higher uptake of patients in the initial months of the pandemic compared to previous months (Figure \@ref(fig:g2newppm)). From January 2018 to December 2019 the average increase in the proportion of patients seen previously to the previous months increased by 0.25% per month. In the first four months of 2020 the average increase in patients seen previously to that month was 3.0%. This suggests there was a increase in the uptake of patients in the first four months of 2020. 
+
+```{r g2newppm, echo=FALSE, warning=FALSE,fig.width=6,fig.height=4, fig.cap="Proportion of unique patients that had a MH event in prior months (blue) and those that had an initial MH event on each month (yellow) over time. The red dashed line indicates the start of the pandemic (March 2020)."}
+newppm <- data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "O2_first_contacts_per_month"))
+newppm <- newppm %>% 
+  filter(date >= 2018) %>%
+  mutate(type = ifelse(type == "prop_old", "Seen previously","New patient"))
+
+# newppm %>% filter (date < 2020) %>% filter(type == "Seen previously") %>%
+#   arrange(date) %>% mutate(prev = lag(value)) %>% mutate(val=value-prev) %>% summarise(x=mean(na.omit(val)))
+
+# newppm %>% filter (date > 2020 & date < 2020.333) %>% filter(type == "Seen previously")  %>%
+#   arrange(date) %>% mutate(prev = lag(value)) %>% mutate(val=value-prev) %>% summarise(x=mean(na.omit(val)))
+
+ggplot(newppm) + 
+  geom_area(aes(x=date,y=value,fill=type)) + 
+  scale_y_continuous(labels = scales::percent) +
+  geom_vline(xintercept = 2020.167, color = 'red', linetype = "dashed") +
+  theme_bw() +
+  labs(x = "Time", y="Proportion of patients", fill="") +
+  scale_fill_manual(breaks = c("New patient","Seen previously"),
+                    values = c("goldenrod2","cornflowerblue"),
+                    labels = c("New patients","Patients seen previously")) +
+  theme(legend.position = "bottom")
+ggsave("plots/PropPrePostCovidPerMonth.png",width = 8,height = 5,dpi = "print")
+```
+
+\pagebreak
+
+### Impact of COVID-19 pandemic on MH events {#ob2itt}
+
+In order to investigate the impact that the COVID-19 pandemic could have had in the MH of the CYP population, we conducted interrupted time series (ITS) analyses, which can be used to quantify the difference between the number of MH-events observed during the pandemic and those that are predicted to have occurred if the pandemic had not happened based on previous trends. For our analysis, we considered the data on its own, as well as split by the following variables:
+
+* Age
+* Gender
+* Ethnicity
+* IMD (split into quintiles)
+* CCG the patients were assigned to
+* Care setting
+
+One of the difficulties in the interpretation of these results is the inability to compare use of services (which we can do with our data) with the underlying need of these services by the CYP population (which we cannot assess). As a result, relative decreases in the number of MH events can be interpreted as CYP requiring fewer services during the pandemic, CYP not accessing services despite their need, or perhaps a mixture of both. In cases where we see a relative increase, we can assume that there is a higher demand for services, but we still cannot determine if the needs are being properly met. In our recommendations, we assume that any decrease in MH events reflects insufficient supply i.e. inappropriately low CYP service access services despite assumed need.
+
+\pagebreak
+
+
+```{r Goal 2 - ITT - functions required, include=FALSE}
+time_series_analysis_model2 <- function(data,seasonal = F){
+  
+  data$covid_time <- factor(data$covid_time, levels = c("pre","during"))
+  
+  if(seasonal){
+    model <- glm(n ~ offset(log(total)) + covid_time + daten + tsModel::harmonic(month,1,12),
+                 data = data,
+                 family = quasipoisson(link = "log"))
+  } else {
+    model <- glm(n ~ offset(log(total)) + covid_time + daten,
+                 data = data,
+                 family = poisson(link = "log"))
+  }
+  
+  return(model)
+}
+time_series_analysis_model2_lm <- function(data,seasonal = F){
+  
+  data$covid_time <- factor(data$covid_time, levels = c("pre","during"))
+  
+  if(seasonal){
+    model <- lm(n ~ + covid_time + daten + tsModel::harmonic(month,1,12),
+                 data = data)
+  } else {
+    model <- lm(n ~ covid_time + daten,
+                 data = data)
+  }
+  
+  return(model)
+}
+time_series_analysis_plot2_lm <- function(data,model){
+  
+  data_to_predict <- data %>% filter(covid_time == "during")
+  pre_data <- data %>% filter(covid_time == "pre")
+  
+  preds_pre_covid <- predict(model, pre_data, se.fit = T)
+  preds_pre_covid <- data.frame(n = preds_pre_covid$fit,
+                               lwr = preds_pre_covid$fit - (2 * preds_pre_covid$se.fit),
+                               upr = preds_pre_covid$fit + (2 * preds_pre_covid$se.fit),
+                               date = pre_data$date)
+  
+  #Model w/o covid data
+  tmpmod <- data_to_predict %>% mutate(covid_time = "pre")
+  tmpmod$covid_time <- factor(tmpmod$covid_time, levels = c("pre","during"))
+  
+  preds_no_covid <- predict(model, tmpmod, se.fit = T)
+  preds_no_covid <- data.frame(n = preds_no_covid$fit,
+                               lwr = preds_no_covid$fit - (2 * preds_no_covid$se.fit),
+                               upr = preds_no_covid$fit + (2 * preds_no_covid$se.fit),
+                               date = tmpmod$date)
+  
+  preds_covid <- predict(model, data_to_predict,se.fit = T)
+  preds_covid <- data.frame(n = preds_covid$fit,
+                            lwr = preds_covid$fit - (2 * preds_covid$se.fit),
+                            upr = preds_covid$fit + (2 * preds_covid$se.fit),
+                            date = data_to_predict$date)
+  
+  p <- ggplot() + 
+    #Original data
+    geom_point(data = data, mapping = aes(x=date,y=n,color = "p1"), size= 0.5) +
+    #Pre-pandemic models
+    geom_line(data = preds_pre_covid, mapping = aes(x=date,y=n,color = "p2"), size= 1.5,linetype=1) +
+    geom_ribbon(data = preds_pre_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) +
+    #Predictions for model without COVID data
+    geom_line(data = preds_no_covid, mapping = aes(x=date, y=n, color = "p3"), size = 1.3,linetype=2) + 
+    geom_ribbon(data = preds_no_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) + 
+    #Predictions from model of what's seen for COVID
+    geom_line(data = preds_covid, mapping = aes(x=date, y=n, color = "p4"), size = 1.3) + 
+    geom_ribbon(data = preds_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) + 
+    scale_color_manual(breaks = c("p1","p2","p3","p4"), 
+                       values = c("grey50","cornflowerblue","firebrick","orange"),
+                       labels = c("Original data","Pre-pandemic values","Values expected without COVID-19","Values seen during COVID-19 pandemic")) + 
+    labs(x= "Date", y= "Number of events", color = "") +
+    theme_bw() + 
+    theme(legend.position = "bottom") +
+    guides(color = guide_legend(nrow = 2))
+  
+  return(p)
+}
+time_series_analysis_plot2 <- function(data,model,add_stats = F){
+  
+  data_to_predict <- data %>% filter(covid_time == "during")
+  pre_data <- data %>% filter(covid_time == "pre")
+  
+  preds_pre_covid <- predict(model, pre_data, se.fit = T)
+  preds_pre_covid <- data.frame(n = exp(preds_pre_covid$fit),
+                                lwr = exp(preds_pre_covid$fit - (2 * preds_pre_covid$se.fit)),
+                                upr = exp(preds_pre_covid$fit + (2 * preds_pre_covid$se.fit)),
+                                date = pre_data$date)
+  
+  #Model w/o covid data
+  tmpmod <- data_to_predict %>% mutate(covid_time = "pre")
+  tmpmod$covid_time <- factor(tmpmod$covid_time, levels = c("pre","during"))
+  
+  preds_no_covid <- predict(model, tmpmod, se.fit = T)
+  preds_no_covid <- data.frame(n = exp(preds_no_covid$fit),
+                               lwr = exp(preds_no_covid$fit - (2 * preds_no_covid$se.fit)),
+                               upr = exp(preds_no_covid$fit + (2 * preds_no_covid$se.fit)),
+                               date = tmpmod$date)
+  
+  preds_covid <- predict(model, data_to_predict,se.fit = T)
+  preds_covid <- data.frame(n = exp(preds_covid$fit),
+                            lwr = exp(preds_covid$fit - (2 * preds_covid$se.fit)),
+                            upr = exp(preds_covid$fit + (2 * preds_covid$se.fit)),
+                            date = data_to_predict$date)
+  
+  p <- ggplot() + 
+    #Original data
+    geom_point(data = data, mapping = aes(x=date,y=n,color = "p1"), size= 0.5) +
+    #Pre-pandemic models
+    geom_line(data = preds_pre_covid, mapping = aes(x=date,y=n,color = "p2"), size= 1.5,linetype=1) +
+    geom_ribbon(data = preds_pre_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) +
+    #Predictions for model without COVID data
+    geom_line(data = preds_no_covid, mapping = aes(x=date, y=n, color = "p3"), size = 1.3,linetype=2) + 
+    geom_ribbon(data = preds_no_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) + 
+    #Predictions from model of what's seen for COVID
+    geom_line(data = preds_covid, mapping = aes(x=date, y=n, color = "p4"), size = 1.3) + 
+    geom_ribbon(data = preds_covid, mapping = aes(x = date, y=n, ymin = lwr, ymax = upr), color = "grey50", alpha = 0.2) + 
+    scale_color_manual(breaks = c("p1","p2","p3","p4"), 
+                       values = c("grey50","cornflowerblue","firebrick","orange"),
+                       labels = c("Original data","Pre-pandemic values","Values expected without COVID-19","Values seen during COVID-19 pandemic")) + 
+    labs(x= "Date", y= "Number of events", color = "") +
+    theme_bw() + 
+    theme(legend.position = "bottom") +
+    guides(color = guide_legend(nrow = 2))
+  
+  if(add_stats){
+    msum <- summary(model)
+    covid_imp <- msum$coefficients[rownames(msum$coefficients) == "covid_timeduring",]
+    stat_text <- paste0("Estimated effect:\n",
+                        round(covid_imp[1] * 100,2),
+                        "%, (",
+                        ifelse(covid_imp[4]<0.001,"p<0.001",
+                               paste0("p = ",round(covid_imp[4],3))),
+                        ")")
+    
+    ypos = mean(layer_scales(p)$y$range$range)
+    ypos = (ypos + layer_scales(p)$y$range$range[2]) /2
+    ypos = (ypos + layer_scales(p)$y$range$range[2]) /2
+    
+    p <-  p + geom_text(aes(x=as.Date("2017-01-01"), y=ypos,label = stat_text)) + ggtitle(unique(data$subcat))
+    
+  }
+  
+  return(p)
+}
+run_ts_analysis2 <- function(mhdata,target_variable,tag,Seasonal,Linear=F,Add_Stats=F){
+  
+  output_list<-list()
+  categories <- unique(mhdata[,target_variable])
+  all_data <- data_frame()
+  
+  for(categ in categories){
+    message(paste0("Currently calculating ",target_variable,": ",categ,"\n"))
+    # data_n <-  paste0("O2_ts_",tag,"_",categ,"_data")
+    # model_n <- paste0("O2_ts_",tag,"_",categ,"_model")
+    # plot_n <-  paste0("O2_ts_",tag,"_",categ,"_plot")
+    
+    data_n <-  paste0("data")
+    model_n <- paste0("model")
+    plot_n <-  paste0("plot")
+    
+    mdata <- mhdata %>% filter(subcat == categ) %>% mutate(total = sum(as.numeric(n)),
+                                                           n = as.numeric(n),
+                                                           month = month(date))
+    
+    if(Linear){
+      mmodel <- time_series_analysis_model2_lm(mdata,seasonal = Seasonal)
+      mplot <- time_series_analysis_plot2_lm(data = mdata, model = mmodel)
+    } else {
+      mmodel <- time_series_analysis_model2(mdata,seasonal = Seasonal)
+      mplot <- time_series_analysis_plot2(data = mdata, model = mmodel,add_stats = Add_Stats)
+    }
+    
+    
+    outs <- list(mdata,mmodel,mplot)
+    names(outs) <- c(data_n,model_n,plot_n)
+    
+    output_list[[categ]] <- outs
+    
+  }
+  
+  return(output_list)
+}
+```
+```{r Goal 2 - ITT - Import data, echo=FALSE, message=FALSE, warning=FALSE}
+#Import data extracted from server
+datao2_bas <- data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "O2_baseline")) #baseline
+datao2_age <- data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "02_time_series_age")) #Age variable
+datao2_ccg <-  data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "02_time_series_ccg")) #CCG variable
+datao2_eth <-  data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "02_time_series_eth")) #Ethnicity variable
+datao2_imd <-  data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "02_time_series_imd")) #IMD quintile variable
+datao2_gender <-  data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "02_time_series_sex")) #Gender variable
+datao2_set <-  data.frame(read_excel("dataV2/DataRepository.xlsx",sheet = "O2_time_series_setting")) #Seting variable
+```
+
+#### Baseline
+
+Exploring the data on its own, we identified that there was no significant change in the number of MH events seen compared to those that would have been expected (Figure \@ref(fig:g2base)). 
+
+```{r Goal 2 - ITT - baseline, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_bas$n <- as.numeric(datao2_bas$diag) 
+datao2_bas$date <- zoo::as.Date.yearmon(datao2_bas$MonthYear)
+datao2_bas$total <- datao2_bas$RegPtList
+datao2_bas$covid_time <- ifelse(datao2_bas$Pandemic == 0,"pre","during")
+datao2_bas$daten <- 1:nrow(datao2_bas)
+datao2_bas$subcat <- "Total"
+
+#Run analysis
+O2_ts_bas <- run_ts_analysis2(mhdata = datao2_bas, target_variable = "subcat",tag = "Total",Seasonal=T,Add_Stats = T)
+```
+
+```{r g2base, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=6, fig.height=5, fig.cap="Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL. Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+O2_ts_bas$Total$plot + ggtitle("")
+
+```
+
+\pagebreak
+
+
+#### Age
+
+When considering age, we identified that patients aged 5-11 (Figure \@ref(fig:g2age)A) and those 18-21 (Figure \@ref(fig:g2age)C) saw a significant decrease in the number of MH-events compared with what would have been expected, 17,4% and 25.17%, respectively. We did not identify significant changes for patients age 12-17 (Figure \@ref(fig:g2age)B) or 22-25 (Figure \@ref(fig:g2age)D). Patients aged 0-4 could not be included in this analysis due to low numbers. 
+
+```{r Goal 2 - ITT - age variable, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_age <- datao2_age %>% filter(subcat != "0-4") #Due to small numbers, we can't conduct the analysis on the 0-4 population
+datao2_age$n <- as.numeric(datao2_age$diag) 
+datao2_age$date <- zoo::as.Date.yearmon(datao2_age$MonthYear)
+datao2_age$total <- datao2_age$RegPtList
+datao2_age$covid_time <- ifelse(datao2_age$Pandemic == 0,"pre","during")
+datao2_age$daten <- 1:nrow(datao2_age)
+datao2_age$subcat <- factor(datao2_age$subcat, levels = c("5-11","12-17","18-21","22-25","26-30"))
+#Run analysis
+O2_ts_age <- run_ts_analysis2(mhdata = datao2_age, target_variable = "subcat",tag = "AgeBracket",Seasonal=T,Add_Stats = T)
+```
+
+```{r g2age, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=6, fig.height=5, fig.cap="Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL, split by age groups. Age groups are split into 5-11 (A), 12-17(B), 18-21(C), 22-25(D). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_age$`5-11`$plot)
+
+plot_grid(
+  plot_grid(
+    O2_ts_age$`5-11`$plot + theme(legend.position = "none"),
+    O2_ts_age$`12-17`$plot + theme(legend.position = "none"),
+    O2_ts_age$`18-21`$plot+ theme(legend.position = "none"),
+    O2_ts_age$`22-25`$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2),
+  plot_grid(
+          plot_legend),
+  nrow = 2,rel_heights = c(90,10))
+```
+
+\pagebreak
+
+#### Gender
+
+Our data suggests that while there was no significant difference in the number of MH-events attributable to the pandemic for females (Figure \@ref(fig:g2gen)A), we identified a significant decrease of 12.5% in the number of MH events seen in the pandemic for males compared with what would have been expected (Figure \@ref(fig:g2gen)B). We could not conduct this analysis for individuals who identify as other genders, such as non-binary and gender non-conforming, due to the small numbers.
+
+```{r Goal 2 - ITT - gender variable, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_gender <- datao2_gender %>% filter(subcat != "Unknown") #Due to small numbers, we can't conduct the analysis on people with an 'uknown/other' gender
+datao2_gender$n <- as.numeric(datao2_gender$diag) 
+datao2_gender$date <- zoo::as.Date.yearmon(datao2_gender$MonthYear)
+datao2_gender$total <- datao2_gender$RegPtList
+datao2_gender$covid_time <- ifelse(datao2_gender$Pandemic == 0,"pre","during")
+datao2_gender$daten <- 1:nrow(datao2_gender)
+datao2_gender$subcat <- factor(datao2_gender$subcat, levels = c("Male","Female"))
+
+#Run analysis
+O2_ts_gender <- run_ts_analysis2(mhdata = datao2_gender, target_variable = "subcat",tag = "gender",Seasonal=T,Add_Stats = T)
+```
+
+```{r g2gen, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=6, fig.height=4, fig.cap = "Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL for females (A) and males (B). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_gender$Female$plot)
+
+plot_grid(
+  plot_grid(
+    O2_ts_gender$Female$plot + theme(legend.position = "none"),
+    O2_ts_gender$Male$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2),
+  plot_grid(
+          plot_legend)
+,nrow = 2,rel_heights = c(8,1))
+
+ggsave(O2_ts_gender$Male$plot,filename = "plots/ITS_male.png",width = 8, height = 4)
+```
+
+\pagebreak
+
+#### Ethnicity
+
+When considering CYP ethnicities, we did not identify a significant change in the number of MH events during the pandemic compared with what would have been expected for any of the categories studied (Figure \@ref(fig:g2eth)). 
+
+```{r Goal 2 - ITT - ethnicity variable, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_eth$n <- as.numeric(datao2_eth$diag)
+datao2_eth$date <- zoo::as.Date.yearmon(datao2_eth$MonthYear)
+datao2_eth$total <- datao2_eth$RegPtList
+datao2_eth$covid_time <- ifelse(datao2_eth$Pandemic == 0,"pre","during")
+datao2_eth$daten <- 1:nrow(datao2_eth)
+
+datao2_eth$subcat[datao2_eth$subcat == "Black or black british"] <- "Black or Black British"
+datao2_eth$subcat[datao2_eth$subcat == "Asian or asian british"] <- "Asian or Asian British"
+
+#Run analysis
+O2_ts_eth <- run_ts_analysis2(mhdata = datao2_eth, target_variable = "subcat", tag = "ethinicity",Seasonal = T,Add_Stats = T)
+```
+
+```{r g2eth, echo=FALSE, message=FALSE, warning=FALSE, fig.width=6, fig.height=7, fig.cap="Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL, split by ethnicity. Ethnicity categories are split into Asian/Asian British (A), Black/Black British(B), White(C), Mixed (D), Other ethnic groups(E), and Unkown/No ethnicity assigned (F). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_eth$White$plot)
+
+plot_grid(
+  plot_grid(
+    O2_ts_eth$`Asian or Asian British`$plot + theme(legend.position = "none"),
+    O2_ts_eth$`Black or Black British`$plot + theme(legend.position = "none"),
+    O2_ts_eth$White$plot + theme(legend.position = "none"),
+    O2_ts_eth$Mixed$plot + theme(legend.position = "none"),
+    O2_ts_eth$`Other ethnic groups`$plot + theme(legend.position = "none"),
+    O2_ts_eth$Unknown$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2),
+  plot_grid(
+          plot_legend)
+,nrow = 2,rel_heights = c(9,1))
+```
+
+\pagebreak
+
+#### IMD quintiles
+
+We identified that CYP in areas in IMD quintile 2 (Figure \@ref(fig:g2imd)B) and 5 (Figure \@ref(fig:g2imd)E) saw a significant decrease in the number of MH-events compared with what would have been expected, 10,7% and 8.2%, respectively. We did not identify significant changes for those living in other areas in other IMD quintiles.
+
+```{r Goal 2 - ITT - IMD variable, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_imd$n <- as.numeric(datao2_imd$diag)
+datao2_imd$date <- zoo::as.Date.yearmon(datao2_imd$MonthYear)
+datao2_imd$total <- datao2_imd$RegPtList
+datao2_imd$covid_time <- ifelse(datao2_imd$Pandemic == 0,"pre","during")
+datao2_imd$daten <- 1:nrow(datao2_imd)
+
+datao2_imd$subcat <- case_when(datao2_imd$subcat == "1" ~ "Quintile 1 (Most deprived)",
+                               datao2_imd$subcat == "2" ~ "Quintile 2",
+                               datao2_imd$subcat == "3" ~ "Quintile 3",
+                               datao2_imd$subcat == "4" ~ "Quintile 4",
+                               datao2_imd$subcat == "5" ~ "Quintile 5 (Least deprived)",
+                               datao2_imd$subcat == "Unknown" ~ "Unknown IMD quintile",
+                               )
+
+#Run analysis
+O2_ts_imd <- run_ts_analysis2(mhdata = datao2_imd, target_variable = "subcat",tag = "IMD",Seasonal = T, Add_Stats = T)
+```
+
+```{r g2imd, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=6, fig.height=6,fig.cap="Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL, split by IMD quintile (quintile 1 (most deprived, A), quintile 2 (B), quintile 3 (C), quintile 4 (D), quintile 5 (least deprived area, E), patients with an unknown IMD quintile (F)). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line the modelled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_imd$`Quintile 1 (Most deprived)`$plot)
+
+plot_grid(
+  plot_grid(
+    O2_ts_imd$`Quintile 1 (Most deprived)`$plot + theme(legend.position = "none"),
+    O2_ts_imd$`Quintile 2`$plot + theme(legend.position = "none"),
+    O2_ts_imd$`Quintile 3`$plot + theme(legend.position = "none"),
+    O2_ts_imd$`Quintile 4`$plot + theme(legend.position = "none"),
+    O2_ts_imd$`Quintile 5 (Least deprived)`$plot + theme(legend.position = "none"),
+    O2_ts_imd$`Unknown IMD quintile`$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2),
+  plot_grid(
+          plot_legend)
+,nrow = 2,rel_heights = c(9,1))
+```
+
+\pagebreak
+
+#### CCGs
+
+We explored differences based on CCGs. We identified three CCGs, Ealing, Hammersmith and Fullham, and Hounslow which saw a significant decrease in the number of MH-related events compared with the expected, 15.6% (Figure \@ref(fig:g2ccg)C),  10.0% (Figure (\@ref(fig:g2ccg)D)), and  15.1% (Figure (\@ref(fig:g2ccg)G)). All other CCGs did not show significant changes. It should be noted that all eight CCGs in North West London merged to be a single CCG in 2021/22.
+
+```{r Goal 2 - ITT - CCG variable, echo=FALSE, message=FALSE, warning=FALSE}
+#Data prep
+datao2_ccg$n <- as.numeric(datao2_ccg$diag)
+datao2_ccg$date <- zoo::as.Date.yearmon(datao2_ccg$MonthYear)
+datao2_ccg$total <- datao2_ccg$RegPtList
+datao2_ccg$covid_time <- ifelse(datao2_ccg$Pandemic == 0,"pre","during")
+datao2_ccg$daten <- 1:nrow(datao2_ccg)
+
+datao2_ccg$subcat <- str_to_title(datao2_ccg$subcat)
+datao2_ccg$subcat <- str_replace_all(datao2_ccg$subcat,"Nhs","NHS")
+datao2_ccg$subcat <- str_replace_all(datao2_ccg$subcat,"Ccg","CCG")
+datao2_ccg$subcat <- str_replace_all(datao2_ccg$subcat,"And","and")
+
+#Run analysis
+O2_ts_ccg <- run_ts_analysis2(mhdata = datao2_ccg, target_variable = "subcat",tag = "CCG",Seasonal = T,Add_Stats = T)
+```
+```{r g2ccg, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=9, fig.height=9, fig.cap="Interrupted time series analysis of the ncounts of MH related events per month of the CYP population in NWL, split by CCG (Brent (A), Central London (B), Ealing (C), Hammersmith and Fulham (D), Harrow (E), Hillingdon (F), Hounslow, and West London (H)). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_ccg$`NHS Hounslow CCG`$plot)
+
+plot_grid(
+  plot_grid(
+   O2_ts_ccg$`NHS Brent CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Central London (Westminster) CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Ealing CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Hammersmith and Fulham CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Harrow CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Hillingdon CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS Hounslow CCG`$plot + theme(legend.position = "none"),
+   O2_ts_ccg$`NHS West London CCG`$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2),
+  plot_grid(
+          plot_legend)
+,nrow = 2,rel_heights = c(95,5))
+
+
+# ggsave(filename = "plots/HounslowCCG.png",plot = O2_ts_ccg$`NHS Hounslow CCG`$plot,device = "png",width = 10,height = 5)
+# ggsave(filename = "plots/H_and_FCCG.png",plot = O2_ts_ccg$`NHS Hammersmith and Fulham CCG`$plot,device = "png",width = 10,height = 5)
+# ggsave(filename = "plots/EalingCCG.png",plot = O2_ts_ccg$`NHS Ealing CCG`$plot,device = "png",width = 10,height = 5)
+
+```
+
+\pagebreak
+
+#### Care setting
+
+Finally, we explored differences based on patients care setting. We identified GP events with a MH-related read code or GP prescriptions of MH drugs to have significantly decreased since the start of the pandemic (16.18% (Figure \@ref(fig:g2set)A). Similarly, we identified a decrease of 36.3% in the number of MH-related outpatient appointments in NWL (Figure \@ref(fig:g2set)C). We did not identify significant changes to the number of events related to patients seen at either of the MH trusts in NWL (Figure \@ref(fig:g2set)B), or then number of patients seen in A&E with psychiatric conditions (Figure \@ref(fig:g2set)D). Elective and non-elective MH admissions could not be included in this analysis due to low numbers over time.
+
+```{r Goal 2 - ITT - Setting variable, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=8, fig.height=8}
+#Data prep
+datao2_set <- datao2_set %>% filter(subcat %nin% c("Non Elective Admission with MH ICD10",
+                                                   "Elective Admission with MH ICD10"))
+datao2_set$n <- as.numeric(datao2_set$diag)
+datao2_set$date <- zoo::as.Date.yearmon(datao2_set$MonthYear)
+datao2_set$total <- datao2_set$RegPtList
+datao2_set$covid_time <- ifelse(datao2_set$Pandemic == 0,"pre","during")
+datao2_set$daten <- 1:nrow(datao2_set)
+
+datao2_set$subcat[datao2_set$subcat=="GP Event with Read Code or GP prescription with MH drug"] = "GP Event with Read Code\nor GP prescription with MH drug"
+
+#Run analysis
+O2_ts_set <- run_ts_analysis2(mhdata = datao2_set, target_variable = "subcat",tag = "CCG",Seasonal = T,Add_Stats = T)
+```
+```{r g2set, echo=FALSE, message=FALSE, warning=FALSE,  fig.width=9, fig.height=8, fig.cap="Interrupted time series analysis of the counts of MH related events per month of the CYP population in NWL, split by care setting (GP event with read code or GP prescription of MH drug (A), Seen at MH Trust (CNWL/WLMHT) (B), Outpatient appointment with MH TFC (C), A&E attendance with psychiatric condition (D)). Grey dots show the number of MH events per month, blue lines show the modeled data prior to the COVID-19 pandemic, the yellow line shows the modeled number of MH events seen during the pandemic, and the red line the number of events expected to happen had the pandemic not occurred. Grey sections around lines indicate 95% confidence intervals."}
+#Make plot
+plot_legend <- get_legend(O2_ts_set$`GP Event with Read Code\nor GP prescription with MH drug`$plot)
+
+plot_grid(
+  plot_grid(
+    O2_ts_set$`GP Event with Read Code\nor GP prescription with MH drug`$plot +
+      theme(legend.position = "none"),
+    O2_ts_set$`Seen at MH Trust (CNWL/WLMHT)`$plot + theme(legend.position = "none"),
+    O2_ts_set$`Outpatient Appointment with MH TFC`$plot + theme(legend.position = "none"),
+    O2_ts_set$`A&E Attendance with Psychiatric Conditions`$plot + theme(legend.position = "none"),
+    labels = 'AUTO',ncol = 2,
+    align = "hv",
+    axis = "tblr"),
+  plot_grid( plot_legend),
+  nrow = 2,rel_heights = c(95,5)
+  )
+```
+
+
+\pagebreak
+
+
+## Objective 3: Severity of MH difficulties
+
+For our third goal, our aim was to look more closely at the number of CYP patients admitted to either of two MH NHS trusts in NWL (Central and North West London, West London NHS trusts), and conduct an ITS analysis (similar to that of our second objective, see section \@ref(ob2itt)) with a particular interest in the aforementioned demographic variables, as well a subset of MH related ICD-10 codes (Table \@ref(tab:g3codes)). However, due to the low overall number of patients identified the analysis was not possible. We then expanded our goal to include any admission into an NHS trust in NWL which included any of of the ICD-10 codes in Table \@ref(tab:g3codes) in any position. This approach gave us a total of 365 patients from March 2015 to September 2021 (Figure \@ref(fig:g3admis)). However, we identified a large spike in the number of admissions in 2021 compared to all previous years.
+
+
+```{r g3admis, fig.cap=" Number of elective and non-elective admissions to a NHS trust in NWL per year with an ICD-10 code listed in table 3 in any position.", warning=FALSE, echo=FALSE, fig.width=7, fig.height=4}
+
+admis_overall <- data.frame(read_excel("dataV2/DataRepository.xlsx","03_Admission_types"))
+
+admis_overall_plot <- ggplot(admis_overall) + 
+  geom_bar(aes(x=year,y=n),stat='identity') +
+   theme_bw() + 
+  labs(x="Year",y="Number of elective\nand non-elective admissions")
+admis_overall_plot
+```
+
+```{r g3codes, warning=FALSE, echo=FALSE}
+
+g3list <- read_excel("dataV2/DataRepository.xlsx",sheet = "ICD10_codes")
+
+tabindx <- table(g3list$SubCategory)
+
+g3listsub <- g3list %>% select(`ICD-10 code` = Code,
+                            Description = Description2)
+
+doc.type <- knitr::opts_knit$get('rmarkdown.pandoc.to')
+if(doc.type == "docx"){
+  g3listsub %>%
+    mutate(Subcategory = g3list$SubCategory) %>%
+    select(Subcategory, `ICD-10 code`, Description = Description) %>%
+    pander::pander()
+  } else {
+  kbl(g3listsub,caption = "List of ICD10 codes considered for analysis") %>%
+  kable_paper("striped") %>%
+  column_spec(2,width = "14cm") %>%
+  pack_rows(index = tabindx)
+}
+```
+
+We identified a trend in our data that highlights the gender disparity in terms in MH-related admissions (Figure \@ref(fig:g3gen)). Our data suggest that the majority of CYP in NWL that are admitted due to MH-reasons are females, particularly since the start of 2021 . 
+
+```{r Goal 3 - Admitted patients - gender split, warning=FALSE, echo=FALSE, message=FALSE}
+
+o3gen <- data.frame(read_excel("dataV2/DataRepository.xlsx","O3_gender_split"))
+
+o3gen <- o3gen %>% mutate(
+  tot = as.numeric(tot),
+  year_month = zoo::as.Date.yearmon(year_month)
+) %>%
+  mutate(tot = ifelse(is.na(tot),0,tot))
+```
+
+```{r g3gen, warning=FALSE, fig.width=6, fig.height=3, echo=FALSE, message=FALSE, fig.cap="Number of female(red) and male(blue) CYP patients admitted by month to a NHS trust in NWL with an ICD-10 code (table 3) listed in any position. Bars marked with an '*' indicate small numbers that had to be suppressed suppressed to maintain patient confidentiality"}
+ggplot(o3gen) + 
+  geom_bar(aes(x=year_month, y=tot, fill = Gender),width = 30,
+           stat='identity',position = 'dodge') + 
+  scale_color_manual(values = c("firebrick","navyblue")) +
+  geom_text(aes(y=0,x=year_month,label=aster), hjust=1) +
+  theme_bw() +
+  theme(legend.position = 'bottom') +
+  labs(x="",y="Number of admitted patients")
+```
+
+\pagebreak
+
+## Objective 4: Transition to other types of MH services
+
+For the fourth and final objective of our analysis, we set out to study transitions to other types of MH services. The specific goal was to study transitions from child to adult MH services and answer the questions in regards to whether all young people go on to access adult MH services and whether these transitions were affected by COVID-19. 
+
+We found that 1651 (4.3%) patients transitioned from CAHMS to adult services (we counted only those with the last record marked as adult service). Figure \@ref(fig:o4distrib1) shows the distribution of ages at which the transition occurred. The median age of transition is 18. Early age of transition in some cases can be an artifact of patients whose last appointment was a sporadic visit to adult service. On the other hand, late ages of transition can be a result of a gap between the last visit to CAMHS close to the age of 18 followed by a recovery and a relapse several years later with a referral to an adult service.  
+
+```{r o4distrib1, echo=FALSE, fig.cap="Histograms showing the counts of unique patients transition from CAMHS to adult MH services from March 2015 to September 2021", fig.height=2, fig.width=8, message=FALSE, warning=FALSE}
+
+# o4distrib <- read_excel("dataV2/DataRepository.xlsx",sheet = "O4_distributions") %>%
+#   mutate(type = factor(type,
+#                        levels = c("All transitions","Pre_covid","Covid"),
+#                        labels = c("All transitions","Prior to pandemic","During pandemic")))
+# 
+# ggplot(o4distrib) + 
+#   geom_bar(aes(x=Age,y=Counts), stat='identity') + 
+#   facet_grid(~type) +
+#   labs(x="Age of transition to adult MH service",y="Number of patients") +
+#   theme_bw()
+# ggsave("plots/TransitionDistributions.png",width = 8,height = 4)
+
+o4distrib <- read_excel("dataV2/DataRepository.xlsx",sheet = "O4_distributions") %>%
+  mutate(type = factor(type,
+                       levels = c("All transitions","Pre_covid","Covid"),
+                       labels = c("All transitions","Prior to pandemic","During pandemic"))) %>%
+  filter(type == "All transitions")
+
+ggplot(o4distrib) + 
+  geom_bar(aes(x=Age,y=Counts), stat='identity') + 
+  facet_grid(~type) +
+  labs(x="Age of transition to adult MH service",y="Number of patients") +
+  theme_bw()
+
+```
+
+Next, we studied the effect of COVID-19 on the age of transition. We found that COVID-19 pandemic changed the median age of transition from 18 to 19. Figure \@ref(fig:o4distrib2) shows that the distributions of ages at which the transition occurred during pre-COVID and COVID periods. It can be seen that the transition to adult MH services almost does not happen before the age of 18 during COVID-19. Mann-Whitney test confirms that the difference of the distributions is highly significant (p-value < 0.001). This suggests that during COVID-19 pandemic patients below 18 did not have a previously available flexibility to get referral to adult MH services or transition there earlier.  
+
+```{r o4distrib2, warning=FALSE, fig.width=8, fig.height=2, echo=FALSE, message=FALSE, fig.cap="Histograms showing the counts of unique patients transition from CAMHS to adult MH services prior to the pandemic (March 2015 to February 2020) and during the pandemic (March 2020 to September 2021)."}
+
+o4distrib <- read_excel("dataV2/DataRepository.xlsx",sheet = "O4_distributions") %>%
+  mutate(type = factor(type,
+                       levels = c("All transitions","Pre_covid","Covid"),
+                       labels = c("All transitions","Prior to pandemic","During pandemic"))) %>%
+  filter(type != "All transitions")
+
+
+ggplot(o4distrib) + 
+  geom_bar(aes(x=Age,y=Counts), stat='identity') + 
+  facet_grid(~type) +
+  labs(x="Age of transition to adult MH service",y="Number of patients") +
+  theme_bw()
+
+```
+
+\pagebreak
+ 
+# Service intervention recommendations
+
+Based on our key findings, this section outlines some key service interventions that should be made at either the macro, meso or micro level of the healthcare system (items in bold denote our key findings):  
+
+1.	**Regardless of age, sex, ethnicity, IMD quintile or geography MH utilisation has increased**
+    a.	This reflects increased demand and therefore to offset an increase in waiting times, a corresponding investment in capacity must be created. 
+
+2.	**The pandemic has created a significant number of new patients who are seeking mental health support**
+    a.	There is a growing consensus that the nature of the pandemic itself might have exacerbated mental health issues due to lockdowns, interruptions to care to education and health care services, etc. [@ukparlam]. Therefore, as per recommendation 1, there is a need to increase overall capacity. 
+    b.	However, it is also important that continuity of care is maintained for those patients already known to mental health services, where possible. 
+    c.	Digital therapeutics may represent a way of diminishing impact on waiting times, but it is important to note that not all CYP feel comfortable with digital access. Furthermore, the digitisation of the school experience has actually driven some of the observed increase in MH service demand.
+    
+3.	**5-11 and 18-21 year olds are specific cohorts who may have had decreased access**
+    a.	Proactive case by case review of those CYP in these age cohorts who already known to MH services. This could minimize the impact of supply disruptions and mitigate against CYP being inadvertently lost to follow-up.
+    
+4.	**Ealing, Hammersmith & Fulham and Hounslow CCGs saw a significant decrease in utilisation**
+    a.	Review of these specific boroughs’ service capacity to ensure that local services are able to meet demand.
+    
+5.  **Transition between CAMHS to Adult MHS seems to have been affected by the pandemic**
+    a. It seems that CAMHS services retained relationships with existing patients, which intuitively seems a valid decision but a review of improving transition flows from CAMHS to Adult MHS to ensure that CAMHS has sufficient capacity for new patients would be worthwhile.  
+
+
+\pagebreak
+
+# Summary
+
+The aim of our analysis was to assess the impact of COVID-19 in the CYP population of NWL. Overall, we have identified a tendency towards decrease in the number of MH events compared to what would have been expected, although due to the nature of this data, and the nature of access to some MH services during the height of the pandemic, we cannot determine if this is due to a lack of access to services or a lesser need of these services. 
+In light of this,  we would encourage further,  more-targeted research to determine the underlying course of these changes in order to provide better MH services to CYP in NWL.
+
+**Prevalence of MH difficulties in the CYP population**
+
+As part of our first objective, we identified two trends that warrant further investigation: The differences in the proportion of CYP people having MH-events when considering ethnicity, and the difference in GP-related MH-events by gender. When discussing differences based on ethnicity with our young people advisory group (YPAG), some of the members mentioned that this reflects what they have seen in their lives, where CYP of Asian or Asian British feel like there is a stigma attached to talking about mental health problems. Furthermore, our YPAG group also commented on the stigma some males may feel around having conversations about their mental health, which was reflected in our data in the difference in GP-related mental health events. Future efforts could be focused on ensuring that CYP have ways of speaking with people about their mental health in a safe environment, in a way that is convenient for them, to encourage these conversations. Similar actions should be taken for males in order to ensure that they are able to access services as needed.
+
+**The impact of COVID-19 on the CYP population**
+
+For our second objective, we focused on quantifying the impact on COVID-19. As mentioned previously, one of the limitations of this analysis is the lack of information on MH service needs: our results only reflect usage of MH services. In terms of age, we identified two age groups, 5-11 and 18-21, accessing services less than expected, while all other groups had similar numbers as expected. This could suggest that individuals are not accessing services despite their possible need or that they are accessing services in different ways, for example by using texting services such as YoungMinds [@street2003winning] that are not captured in our data. Another possibility, in particular for those aged 18-21, is that our data may not include adult-specific data sources, such as IAPT and as a result we are underestimating the number of MH events in our data.
+
+When exploring differences based on gender, we identified significant difference for males, but not for females, potentially suggesting an area of potential future research to ensure that this group has access to necessary MH care. We identified differences for IMD quintiles for those in quintile 2 (second least deprived) and 5 (most deprived). There is no clear explanation as to why only these two quintiles saw a significant change and not the others, and further research is required to ensure these differences are investigated. We identified differences in CCGs, three of these regions, Hammersmith & Fulham, Ealing and Hounslow showed lower levels than expected. This could suggest that there is an unmet need of MH services in these areas. We did not identify differences based on ethnicity
+
+Finally, we identified a decrease in both GP visits with a MH-related read code or GP prescriptions of MH-drugs as well as MH-related outpatient appointments as a result of the COVID-19 pandemic. This is very likely a reflection of the difficulties CYP experienced during the pandemic, be it for lack of access to services or unwillingness to attend healthcare settings, to receive MH care.
+
+Overall, this analysis shows a broad overview of differences based on five demographic variables and highlights a few categories that may have been more impacted by the pandemic. However, more research is needed in this area to further describe differences across demographic categories, for example, by combining multiple variables in the same analysis, which could provide more detailed insights. Another possible way of exploring this data could be by exploring each of the six types of MH events we are combining in this analysis separately. Another important highlight is the steady increase in CYP accessing MH-services over time. One of our members of our YPAG commented on this topic "The number of new people needing help is scary. It creates fear that you're not seen until you're literally at death's door".
+
+**Severity of MH difficulties**
+
+For our third objective, we tried to determine changes in MH-related admissions due to the COVID-19 pandemic. Due to the small number of patients observed, this analysis was not possible. However, we identified a difference in MH-related admissions when considering gender, which has been previously described in the literature [@10.1093/pubmed/24.3.179]. Further research should focus further characterizing the impact of COVID-19 on patterns of admission.
+
+**Transition to other types of MH services**
+
+Finally, for our last aim, we tried to determine changes in patterns of referrals due to the pandemic. We identified a change in the age patterns at which patients were referred from CAMHS to adult services. Further research is needed to understand the effect of this change and identify and potential consequences it may have in the future.
+
+\pagebreak
+
+# Limitations
+
+## It is not possible to identify when people are removed from the Discover now dataset.
+
+Due to the structure of the Discover dataset, it is possible to know if a particular person is registered in the dataset, if they have left the dataset or if they have died, but we cannot track when, if any, changes happened to the registration status of individual people. This information can only be identified retrospectively at the time the data is extracted. This means that, for example, we cannot determine the number of individuals that were present in a given year for the dataset.
+
+## Accessing MH services over the years.
+
+The data lacks information about points of access to health services. Particularly, it was not possible to conclude if a referral was done after GP visit or not. Therefore, the data in regard to accessing MH services should be interpreted assuming this limitation.
+
+## Transitions from child to adult MH services.
+
+There are three columns in the mental health specific dataset which reflect information about the type of service  “ServiceGroup,” “ServiceDescription”, “Team.” We used “ServiceGroup” and “ServiceDescription” to assign referrals to ‘CAMHS’ or ‘Adult MHS’ type of service based on age distributions and the descriptors. Some descriptors were excluded from the analysis when it was not clear whether  descriptor refers to CAHMS or adult MS or when the age distribution included significant portions of patients younger or older than 18 (I.e. “Learning disabilities”, “Clozapine clinics”, “Impatient recovery service”, “London Urgent Care Service”, “Impatients - Acute” ect). Therefore, since the type of service was not assigned to all patients, the results of the analysis may be biased.
+
+\pagebreak 
+ 
+# References
+
+<!-- This line is to help keep this section numbered -->
+\phantom{empty text bit} 
+
