@@ -44,8 +44,6 @@ This analysis used the following data:
 - [Discover](https://www.discover-now.co.uk)
 - [ONS Clinical commissioning group population estimates](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/clinicalcommissioninggroupmidyearpopulationestimates)
 
-## How does it work?
-
 ## Requirements
 
 These scripts were written in *[please fill in]*.
