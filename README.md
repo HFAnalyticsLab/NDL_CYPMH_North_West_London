@@ -46,7 +46,17 @@ This analysis used the following data:
 
 ## Requirements
 
-These scripts were written in *[please fill in]*.
+These scripts were written in R version 3.6.1 within the Discover research environment. The following R packages were used:
+
+- readxl (v 1.3.1)
+- dplyr (v 1.0.7)
+- tidyverser (v 1.2.1)
+- data.table (v 1.14.0)
+- readr (v 1.4.0)
+- magritrr (v 2.0.1)
+- lubridate (v 1.7.10)
+- gridExtra (v 2.3)
+- zoo (v 1.8-9)
 
 ## Getting started
 
@@ -56,17 +66,17 @@ A short description of what each code does, and what each file is. *[please fill
 
 - [Roberto Fernandez Crespo](roberto.fernandez-crespo1@imperial.ac.uk)
 - Gulam Muktadir
-- Evgeniy Galimov
+- [Evgeniy Galimov](evgeny.galimov@imperialcollegehealthpartners.com)
 - Sandeep Prashnar
 - Sarah Houston
 - Sadie Myhill
-- Clare McCrudden
+- [Clare McCrudden](clare@helixcentre.com)
 - Emma Sharpe-Jones
 - Lewis Thomas
 - Tomazs Szymanski
 - Alex Bottle
 - Melanie Leis
-- Matthew Chisambi
+- [Matthew Chisambi](matthew.chisambi@imperialcollegehealthpartners.com)
 
 ## License
 
