@@ -60,7 +60,12 @@ These scripts were written in R version 3.6.1 within the Discover research envir
 
 ## Getting started
 
-A short description of what each code does, and what each file is. *[please fill in]*.
+You can find the R code used to process the data used in this report on the 'Codes' directory. Here you can find three scrips:
+- NDL2_analysis_V2.R: This script was used to calculate values for the objectives 1 (Describe the CYP MH population in NWL), 2 (Assess the impact of COVID-19 and the CYP MH service use) and 3 (Investigate the impact of COVID-19 on the severity of MH difficulties)
+- NDL2_analysis_V2.R: This script contains the R code used to analyse data shown in our 4th analysis goal (Invstigate the impact of COVID-19 on trainsitions from CAMHS to adult MH services)
+- denominator_calcs.R: This script was used to summarise the population data in the [ONS Clinical commissioning group population estimates](https://www.ons.gov.uk/peoplepopulationandcommunity/populationandmigration/populationestimates/datasets/clinicalcommissioninggroupmidyearpopulationestimates) dataset to standardise some of the values in our analysis of the CYP population accessing MH care
+
+In this directory you can also find an excel file containing aggregate data used throughout this report, as well as codes used to identify MH appointments, conditions, medications and service users.
 
 ## Authors
 
